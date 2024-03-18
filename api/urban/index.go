@@ -26,6 +26,7 @@ type UrbanDictRes struct {
 }
 
 func Handler(writer http.ResponseWriter, request *http.Request) {
+	log.Println("Incoming request")
 	term := request.URL.Query().Get("term")
 
 	var res *http.Response
@@ -45,6 +46,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 		body, _ := io.ReadAll(res.Body)
 		log.Println("Error calling urban api", res.StatusCode, string(body))
+		log.Println("Seding response", res.StatusCode)
 		return
 	}
 
@@ -66,4 +68,6 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	writer.WriteHeader(200)
 	writer.Write([]byte(word))
+
+	log.Println("Seding response", 200)
 }
