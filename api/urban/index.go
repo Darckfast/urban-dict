@@ -2,8 +2,11 @@ package urban
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -35,7 +38,10 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	if res.StatusCode != 200 {
 		writer.WriteHeader(res.StatusCode)
 
-		log.Println("Error calling urban api", res.StatusCode)
+		defer res.Body.Close()
+
+		body, _ := io.ReadAll(res.Body)
+		log.Println("Error calling urban api", res.StatusCode, string(body))
 		return
 	}
 
@@ -43,8 +49,11 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	json.NewDecoder(res.Body).Decode(&urbanDictRes)
 
-	log.Println(urbanDictRes)
+	definition := urbanDictRes.List[0].Definition
+	definition = strings.ReplaceAll(definition, "[", "")
+	definition = strings.ReplaceAll(definition, "]", "")
+	word := fmt.Sprintf("%s: %s", urbanDictRes.List[0].Word, definition)
 
 	writer.WriteHeader(200)
-	writer.Write([]byte("it works!"))
+	writer.Write([]byte(word))
 }
