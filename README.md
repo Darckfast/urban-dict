@@ -1,4 +1,4 @@
-![logo](.github/urban-dict.png)
+![logo](.github/images/urban-dict.png)
 
 # Urban dict
 
