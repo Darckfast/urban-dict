@@ -29,7 +29,10 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	term := request.URL.Query().Get("term")
 
 	var res *http.Response
-	if term == "" {
+
+	hexValue := fmt.Sprintf("%x", term)
+
+	if term == "" || hexValue == "f3a08080" {
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
 	} else {
 		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + term)
@@ -48,6 +51,13 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	var urbanDictRes UrbanDictRes
 
 	json.NewDecoder(res.Body).Decode(&urbanDictRes)
+
+	if len(urbanDictRes.List) == 0 {
+		writer.WriteHeader(200)
+		writer.Write([]byte(":( no definition found for: " + term))
+
+		return
+	}
 
 	definition := urbanDictRes.List[0].Definition
 	definition = strings.ReplaceAll(definition, "[", "")
