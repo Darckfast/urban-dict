@@ -4,11 +4,13 @@
 
 This API retrieves entries from Urban Dictionary, and return them formatted as plain text
 
+It also has a 10 minutes cache for random entries ( without the term ), meaning it's essential to pass the argument `channel` in the URL
+
 ## StreamElements
-To setup this using StreamElements, add a custom command with the following 
+To set up this using StreamElements, add a custom command with the following 
 
 ```
-${customapi.https://darckfast.com/api/urban?term=${pathescape ${1:}}
+${customapi.https://darckfast.com/api/urban?term=${pathescape ${1:}}&channel=$(channel)}
 ```
 
 ### Usage
