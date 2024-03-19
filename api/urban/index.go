@@ -46,7 +46,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 		body, _ := io.ReadAll(res.Body)
 		log.Println("Error calling urban api", res.StatusCode, string(body))
-		log.Println("Seding response", res.StatusCode)
+		log.Println("Sending response", res.StatusCode)
 		return
 	}
 
@@ -67,7 +67,12 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	word := fmt.Sprintf("%s: %s", urbanDictRes.List[0].Word, definition)
 
 	writer.WriteHeader(200)
+
+	writer.Header().Set("Cache-Control", "public, max-age=600")
+	writer.Header().Set("CDN-Cache-Control", "public, max-age=600")
+	writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age=600")
+
 	writer.Write([]byte(word))
 
-	log.Println("Seding response", 200)
+	log.Println("Sending response", 200)
 }
