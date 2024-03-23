@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -28,7 +29,7 @@ type UrbanDictRes struct {
 func Handler(writer http.ResponseWriter, request *http.Request) {
 	log.Println("Incoming request")
 	term := request.URL.Query().Get("term")
-
+	term, _ = url.QueryUnescape(term)
 	var res *http.Response
 
 	hexValue := fmt.Sprintf("%x", term)
@@ -36,7 +37,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	if term == "" || hexValue == "f3a08080" {
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
 	} else {
-		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + term)
+		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + url.QueryEscape(term))
 	}
 
 	if res.StatusCode != 200 {
