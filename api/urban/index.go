@@ -57,6 +57,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	if len(urbanDictRes.List) == 0 {
 		writer.WriteHeader(200)
 		writer.Write([]byte(":( no definition found for: " + term))
+        log.Println("term searched but not found:", hexValue)
 
 		return
 	}
