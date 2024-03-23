@@ -30,6 +30,8 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	log.Println("Incoming request")
 	term := request.URL.Query().Get("term")
 	term, _ = url.QueryUnescape(term)
+	term = strings.TrimSpace(term)
+
 	var res *http.Response
 
 	hexValue := fmt.Sprintf("%x", term)
