@@ -10,7 +10,7 @@ It also has a 10 minutes cache for random entries ( without the term ), meaning 
 To set up this using StreamElements, add a custom command with the following 
 
 ```
-${customapi.https://darckfast.com/api/urban?term=${pathescape ${1:}}&channel=$(channel)}
+${customapi.https://darckfast.com/api/urban?term=${pathescape ${0:}}&channel=$(channel)}
 ```
 
 ### Usage
