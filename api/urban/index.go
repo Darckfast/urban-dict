@@ -34,11 +34,18 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	term, _ = url.QueryUnescape(term)
 	term = strings.TrimSpace(term)
 
+	if len(term) > 0 && term[0] == '!' {
+		termSplitted := strings.Split(term, " ")
+		termSplitted = termSplitted[1:]
+		term = strings.Join(termSplitted, " ")
+	}
+
 	var res *http.Response
 
 	hexValue := fmt.Sprintf("%x", term)
 
 	if term == "" || hexValue == "f3a08080" {
+		log.Println("Querying for random entry")
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
 	} else {
 		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + url.QueryEscape(term))
