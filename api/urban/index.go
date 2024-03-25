@@ -27,8 +27,8 @@ type UrbanDictRes struct {
 }
 
 const (
-	CACHE_TIME        = "10"
-	CACHE_RANDOM_TIME = "86400"
+	CACHE_TIME        = "86400"
+	CACHE_RANDOM_TIME = "10"
 )
 
 func Handler(writer http.ResponseWriter, request *http.Request) {
@@ -65,10 +65,10 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	isRandom := false
 	if term == "" || hexValue == "f3a08080" {
+		isRandom = true
 		log.Println("Querying for random entry")
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
 	} else {
-		isRandom = true
 		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + url.QueryEscape(term))
 	}
 
