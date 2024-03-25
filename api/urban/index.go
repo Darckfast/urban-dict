@@ -26,7 +26,10 @@ type UrbanDictRes struct {
 	} `json:"list"`
 }
 
-const CACHE_TIME = "10"
+const (
+	CACHE_TIME        = "10"
+	CACHE_RANDOM_TIME = "86400"
+)
 
 func Handler(writer http.ResponseWriter, request *http.Request) {
 	log.Println("Incoming request")
@@ -34,20 +37,38 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	term, _ = url.QueryUnescape(term)
 	term = strings.TrimSpace(term)
 
-	if len(term) > 0 && term[0] == '!' {
-		termSplitted := strings.Split(term, " ")
-		termSplitted = termSplitted[1:]
-		term = strings.Join(termSplitted, " ")
-	}
+	atUser := ""
+	if len(term) > 0 {
+		if term[0] == '!' {
+			termSplitted := strings.Split(term, " ")
+			termSplitted = termSplitted[1:]
+			term = strings.Join(termSplitted, " ")
+		}
 
+		if strings.Contains(term, "@") {
+			termSplitted := strings.Split(term, " ")
+			term = ""
+
+			for _, word := range termSplitted {
+				if word[0] == '@' {
+					atUser = word + " "
+					continue
+				}
+
+				term = term + word + " "
+			}
+		}
+	}
 	var res *http.Response
 
 	hexValue := fmt.Sprintf("%x", term)
 
+	isRandom := false
 	if term == "" || hexValue == "f3a08080" {
 		log.Println("Querying for random entry")
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
 	} else {
+		isRandom = true
 		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + url.QueryEscape(term))
 	}
 
@@ -77,13 +98,19 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	definition := urbanDictRes.List[0].Definition
 	definition = strings.ReplaceAll(definition, "[", "")
 	definition = strings.ReplaceAll(definition, "]", "")
-	word := fmt.Sprintf("%s: %s", urbanDictRes.List[0].Word, definition)
+	word := fmt.Sprintf("%s%s: %s", atUser, urbanDictRes.List[0].Word, definition)
 
 	writer.WriteHeader(200)
 
-	writer.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
-	writer.Header().Set("CDN-Cache-Control", "public, max-age="+CACHE_TIME)
-	writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age="+CACHE_TIME)
+	if isRandom {
+		writer.Header().Set("Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
+		writer.Header().Set("CDN-Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
+		writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
+	} else {
+		writer.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
+		writer.Header().Set("CDN-Cache-Control", "public, max-age="+CACHE_TIME)
+		writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age="+CACHE_TIME)
+	}
 
 	writer.Write([]byte(word))
 
