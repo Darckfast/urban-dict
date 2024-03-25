@@ -26,6 +26,8 @@ type UrbanDictRes struct {
 	} `json:"list"`
 }
 
+const CACHE_TIME = "10"
+
 func Handler(writer http.ResponseWriter, request *http.Request) {
 	log.Println("Incoming request")
 	term := request.URL.Query().Get("term")
@@ -72,9 +74,9 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	writer.WriteHeader(200)
 
-	writer.Header().Set("Cache-Control", "public, max-age=600")
-	writer.Header().Set("CDN-Cache-Control", "public, max-age=600")
-	writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age=600")
+	writer.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
+	writer.Header().Set("CDN-Cache-Control", "public, max-age="+CACHE_TIME)
+	writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age="+CACHE_TIME)
 
 	writer.Write([]byte(word))
 
