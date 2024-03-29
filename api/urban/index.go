@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 )
@@ -23,6 +24,7 @@ type UrbanDictRes struct {
 		WrittenOn   time.Time `json:"written_on"`
 		Example     string    `json:"example"`
 		ThumbsDown  int       `json:"thumbs_down"`
+		Score       int
 	} `json:"list"`
 }
 
@@ -94,6 +96,14 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 		return
 	}
+
+	for i, entry := range urbanDictRes.List {
+		urbanDictRes.List[i].Score = entry.ThumbsUp - entry.ThumbsDown
+	}
+
+	sort.Slice(urbanDictRes.List, func(i, j int) bool {
+		return urbanDictRes.List[i].Score > urbanDictRes.List[j].Score
+	})
 
 	definition := urbanDictRes.List[0].Definition
 	definition = strings.ReplaceAll(definition, "[", "")
