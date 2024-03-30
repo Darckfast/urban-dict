@@ -118,7 +118,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 			}
 			page = page + 1
 
-			if page == 4 {
+			if page == 3 {
 				break
 			}
 		}
