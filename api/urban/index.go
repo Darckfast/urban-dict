@@ -98,12 +98,24 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	for i, entry := range urbanDictRes.List {
+		if entry.ThumbsDown < 0 {
+			entry.ThumbsDown = entry.ThumbsDown * -1
+		}
+
 		urbanDictRes.List[i].Score = entry.ThumbsUp - entry.ThumbsDown
 	}
 
 	sort.Slice(urbanDictRes.List, func(i, j int) bool {
 		return urbanDictRes.List[i].Score > urbanDictRes.List[j].Score
 	})
+
+	for i, entry := range urbanDictRes.List {
+		log.Printf("Score: %d = entry: %s", entry.Score, entry.Definition)
+
+		if i >= 5 {
+			break
+		}
+	}
 
 	definition := urbanDictRes.List[0].Definition
 	definition = strings.ReplaceAll(definition, "[", "")
