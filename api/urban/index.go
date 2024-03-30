@@ -150,6 +150,10 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	definition = strings.ReplaceAll(definition, "]", "")
 	word := fmt.Sprintf("%s%s: %s", atUser, urbanDictRes.List[0].Word, definition)
 
+	if len(word) > 400 {
+		word = word[:397] + "..."
+	}
+
 	writer.WriteHeader(200)
 
 	if isRandom {
