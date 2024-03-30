@@ -14,17 +14,18 @@ import (
 
 type UrbanDictRes struct {
 	List []struct {
-		Definition  string    `json:"definition"`
-		Permalink   string    `json:"permalink"`
-		ThumbsUp    int       `json:"thumbs_up"`
-		Author      string    `json:"author"`
-		Word        string    `json:"word"`
-		Defid       int       `json:"defid"`
-		CurrentVote string    `json:"current_vote"`
-		WrittenOn   time.Time `json:"written_on"`
-		Example     string    `json:"example"`
-		ThumbsDown  int       `json:"thumbs_down"`
-		Score       int
+		Definition    string    `json:"definition"`
+		Permalink     string    `json:"permalink"`
+		ThumbsUp      int       `json:"thumbs_up"`
+		Author        string    `json:"author"`
+		Word          string    `json:"word"`
+		Defid         int       `json:"defid"`
+		CurrentVote   string    `json:"current_vote"`
+		WrittenOn     time.Time `json:"written_on"`
+		Example       string    `json:"example"`
+		ThumbsDown    int       `json:"thumbs_down"`
+		Score         int
+		OriginalIndex int
 	} `json:"list"`
 }
 
@@ -97,11 +98,38 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if len(urbanDictRes.List) == 10 {
+		page := 2
+		for {
+			url := fmt.Sprintf("https://api.urbandictionary.com/v0/define?term=%s&page=%d",
+				url.QueryEscape(term),
+				page,
+			)
+			res, _ = http.Get(url)
+
+			var pagination UrbanDictRes
+
+			json.NewDecoder(res.Body).Decode(&pagination)
+
+			urbanDictRes.List = append(urbanDictRes.List, pagination.List...)
+
+			if len(pagination.List) != 10 {
+				break
+			}
+			page = page + 1
+
+			if page == 3 {
+				break
+			}
+		}
+	}
+
 	for i, entry := range urbanDictRes.List {
 		if entry.ThumbsDown < 0 {
 			entry.ThumbsDown = entry.ThumbsDown * -1
 		}
 
+		urbanDictRes.List[i].OriginalIndex = i
 		urbanDictRes.List[i].Score = entry.ThumbsUp - entry.ThumbsDown
 	}
 
@@ -110,7 +138,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	})
 
 	for i, entry := range urbanDictRes.List {
-		log.Printf("Score: %d = entry: %s", entry.Score, entry.Definition)
+		log.Printf("I: %d; Score: %d = entry: %s", entry.OriginalIndex, entry.Score, entry.Definition)
 
 		if i >= 5 {
 			break
@@ -121,6 +149,10 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	definition = strings.ReplaceAll(definition, "[", "")
 	definition = strings.ReplaceAll(definition, "]", "")
 	word := fmt.Sprintf("%s%s: %s", atUser, urbanDictRes.List[0].Word, definition)
+
+	if len(word) > 400 {
+		word = word[:397] + "..."
+	}
 
 	writer.WriteHeader(200)
 
