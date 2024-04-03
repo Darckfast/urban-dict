@@ -30,7 +30,7 @@ type UrbanDictRes struct {
 }
 
 const (
-	CACHE_TIME        = "86400"
+	CACHE_TIME        = "604800"
 	CACHE_RANDOM_TIME = "10"
 )
 
@@ -83,6 +83,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		body, _ := io.ReadAll(res.Body)
 		log.Println("Error calling urban api", res.StatusCode, string(body))
 		log.Println("Sending response", res.StatusCode)
+		writer.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
 		return
 	}
 
