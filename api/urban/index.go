@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -34,8 +35,10 @@ const (
 	CACHE_RANDOM_TIME = "10"
 )
 
+var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 func Handler(writer http.ResponseWriter, request *http.Request) {
-	log.Println("Incoming request")
+	logger.Info("Incoming request")
 	term := request.URL.Query().Get("term")
 	term, _ = url.QueryUnescape(term)
 	term = strings.TrimSpace(term)
@@ -69,7 +72,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	isRandom := false
 	if term == "" || hexValue == "f3a08080" {
 		isRandom = true
-		log.Println("Querying for random entry")
+		logger.Info("Querying random entry")
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
 	} else {
 		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + url.QueryEscape(term))
@@ -81,8 +84,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		defer res.Body.Close()
 
 		body, _ := io.ReadAll(res.Body)
-		log.Println("Error calling urban api", res.StatusCode, string(body))
-		log.Println("Sending response", res.StatusCode)
+		logger.Error("Error calling urban api", "status", res.StatusCode, "body", string(body))
 		writer.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
 		return
 	}
@@ -94,7 +96,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	if len(urbanDictRes.List) == 0 {
 		writer.WriteHeader(200)
 		writer.Write([]byte(":( no definition found for: " + term))
-		log.Println("term searched but not found:", hexValue, term)
+		logger.Info("term searched but not found: " + term + ", " + hexValue)
 
 		return
 	}
@@ -138,14 +140,6 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		return urbanDictRes.List[i].Score > urbanDictRes.List[j].Score
 	})
 
-	for i, entry := range urbanDictRes.List {
-		log.Printf("I: %d; Score: %d = entry: %s", entry.OriginalIndex, entry.Score, entry.Definition)
-
-		if i >= 5 {
-			break
-		}
-	}
-
 	definition := urbanDictRes.List[0].Definition
 	definition = strings.ReplaceAll(definition, "[", "")
 	definition = strings.ReplaceAll(definition, "]", "")
@@ -169,5 +163,5 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	writer.Write([]byte(word))
 
-	log.Println("Sending response", 200)
+	logger.Info("Sending response", "status", 200)
 }
