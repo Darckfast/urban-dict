@@ -4,7 +4,9 @@
 
 This API retrieves entries from Urban Dictionary, and return them formatted as plain text
 
-It also has a 10 minutes cache for random entries ( without the term ), meaning it's essential to pass the argument `channel` in the URL
+It also has a 10 seconds cache for random entries ( without the term ), meaning it's essential to pass the argument `channel` in the URL
+
+The max characters are capped at 400
 
 ## StreamElements
 To set up this using StreamElements, add a custom command with the following 
