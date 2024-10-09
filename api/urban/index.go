@@ -33,6 +33,7 @@ type UrbanDictRes struct {
 const (
 	CACHE_TIME        = "604800"
 	CACHE_RANDOM_TIME = "10"
+	EMPTY_STRING_HEX  = "f3a08080"
 )
 
 var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -40,37 +41,14 @@ var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 func Handler(writer http.ResponseWriter, request *http.Request) {
 	logger.Info("Incoming request")
 	term := request.URL.Query().Get("term")
-	term, _ = url.QueryUnescape(term)
-	term = strings.TrimSpace(term)
 
-	atUser := ""
-	if len(term) > 0 {
-		if term[0] == '!' {
-			termSplitted := strings.Split(term, " ")
-			termSplitted = termSplitted[1:]
-			term = strings.Join(termSplitted, " ")
-		}
-
-		if strings.Contains(term, "@") {
-			termSplitted := strings.Split(term, " ")
-			term = ""
-
-			for _, word := range termSplitted {
-				if word[0] == '@' {
-					atUser = word + " "
-					continue
-				}
-
-				term = term + word + " "
-			}
-		}
-	}
+	term, atUser := ParseUrlArgs(term)
 	var res *http.Response
 
 	hexValue := fmt.Sprintf("%x", term)
 
 	isRandom := false
-	if term == "" || hexValue == "f3a08080" {
+	if term == "" || hexValue == EMPTY_STRING_HEX {
 		isRandom = true
 		logger.Info("Querying random entry")
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
