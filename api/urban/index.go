@@ -10,34 +10,31 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"time"
-)
 
-type UrbanDictRes struct {
-	List []struct {
-		Definition    string    `json:"definition"`
-		Permalink     string    `json:"permalink"`
-		ThumbsUp      int       `json:"thumbs_up"`
-		Author        string    `json:"author"`
-		Word          string    `json:"word"`
-		Defid         int       `json:"defid"`
-		CurrentVote   string    `json:"current_vote"`
-		WrittenOn     time.Time `json:"written_on"`
-		Example       string    `json:"example"`
-		ThumbsDown    int       `json:"thumbs_down"`
-		Score         int
-		OriginalIndex int
-	} `json:"list"`
-}
+	"urban-dict/pkg/utils"
+
+	multilogger "github.com/Darckfast/multi_logger/pkg/multi_logger"
+)
 
 const (
 	CACHE_TIME        = "604800"
 	CACHE_RANDOM_TIME = "10"
 )
 
-var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+var logger = slog.New(multilogger.NewHandler(os.Stdout))
 
 func Handler(writer http.ResponseWriter, request *http.Request) {
+	ctx, wg := multilogger.SetupContext(&multilogger.SetupOps{
+		Namespace:   request.URL.Path,
+		ApiKey:      os.Getenv("BASELIME_API_KEY"),
+		ServiceName: os.Getenv("VERCEL_GIT_REPO_SLUG"),
+	})
+
+	defer func() {
+		wg.Wait()
+		ctx.Done()
+	}()
+
 	logger.Info("Incoming request")
 	term := request.URL.Query().Get("term")
 	term, _ = url.QueryUnescape(term)
@@ -72,7 +69,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	isRandom := false
 	if term == "" || hexValue == "f3a08080" {
 		isRandom = true
-		logger.Info("Querying random entry")
+		logger.InfoContext(ctx, "Querying random entry")
 		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
 	} else {
 		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + url.QueryEscape(term))
@@ -84,19 +81,19 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		defer res.Body.Close()
 
 		body, _ := io.ReadAll(res.Body)
-		logger.Error("Error calling urban api", "status", res.StatusCode, "body", string(body))
+		logger.ErrorContext(ctx, "Error calling urban api", "status", res.StatusCode, "error", string(body))
 		writer.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
 		return
 	}
 
-	var urbanDictRes UrbanDictRes
+	var urbanDictRes utils.UrbanDictRes
 
 	json.NewDecoder(res.Body).Decode(&urbanDictRes)
 
 	if len(urbanDictRes.List) == 0 {
 		writer.WriteHeader(200)
 		writer.Write([]byte(":( no definition found for: " + term))
-		logger.Info("term searched but not found: " + term + ", " + hexValue)
+		logger.InfoContext(ctx, "term searched but not found: "+term+", "+hexValue)
 
 		return
 	}
@@ -110,7 +107,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 			)
 			res, _ = http.Get(url)
 
-			var pagination UrbanDictRes
+			var pagination utils.UrbanDictRes
 
 			json.NewDecoder(res.Body).Decode(&pagination)
 
@@ -163,5 +160,5 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	writer.Write([]byte(word))
 
-	logger.Info("Sending response", "status", 200)
+	logger.InfoContext(ctx, "request completed", "status", 200)
 }
