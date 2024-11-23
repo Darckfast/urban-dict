@@ -2,6 +2,10 @@ github.com/Darckfast/multi_logger v0.0.3 h1:w9lwxyYsozv5qrhwafHVsD4Yw8Pq2hr3ErIQ
 github.com/Darckfast/multi_logger v0.0.3/go.mod h1:9H+w9FNbhUFZQ9WftNJfKe5jrfE1ZZAwlH7sTiPARCk=
 github.com/Darckfast/multi_logger v0.0.4 h1:3eKLhKWjuJJ0//iFYmh4+C5oloI7nSMVm6Y1LqE84Kc=
 github.com/Darckfast/multi_logger v0.0.4/go.mod h1:9H+w9FNbhUFZQ9WftNJfKe5jrfE1ZZAwlH7sTiPARCk=
+github.com/Darckfast/multi_logger v0.0.5-0.20241123203953-80796b3985d4 h1:aq5fF2mHVxOQF1SdMQ57Q8WhBP4iP2X6yfPL1z1CDmI=
+github.com/Darckfast/multi_logger v0.0.5-0.20241123203953-80796b3985d4/go.mod h1:9H+w9FNbhUFZQ9WftNJfKe5jrfE1ZZAwlH7sTiPARCk=
+github.com/Darckfast/multi_logger v0.0.5 h1:40u341t6XrxhpaYG6DrvmIuaLy/go7a/4fmtiYsrIsI=
+github.com/Darckfast/multi_logger v0.0.5/go.mod h1:9H+w9FNbhUFZQ9WftNJfKe5jrfE1ZZAwlH7sTiPARCk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
