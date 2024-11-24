@@ -36,7 +36,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		ctx.Done()
 	}()
 
-	logger.Info("Incoming request")
+	logger.InfoContext(ctx, "processing request")
 	term := request.URL.Query().Get("term")
 	term, _ = url.QueryUnescape(term)
 	term = strings.TrimSpace(term)
