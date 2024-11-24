@@ -3,7 +3,7 @@ module urban-dict
 go 1.22.4
 
 require (
-	github.com/Darckfast/multi_logger v0.0.6
+	github.com/Darckfast/multi_logger v0.0.7
 	github.com/stretchr/testify v1.10.0
 )
 
