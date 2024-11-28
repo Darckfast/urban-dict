@@ -2,59 +2,35 @@ package urban_test
 
 import (
 	"io"
-	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"urban-dict/api/v1/urban"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRandomTermSearch(t *testing.T) {
-	assert := assert.New(t)
+func FuzzRandomTermSearch(f *testing.F) {
+	testcases := []string{"test", "", "random"}
+	for _, tc := range testcases {
+		f.Add(tc) // Use f.Add to provide a seed corpus
+	}
 
-	res, err := http.Get("http://localhost:3000/api/urban?term=&channel=test")
+	f.Fuzz(func(t *testing.T, qParam string) {
+		req := httptest.NewRequest("GET", "http://localhost:3000/api/v1/urban", nil)
+		q := req.URL.Query()
+		q.Add("term", qParam)
 
-	assert.Nil(err)
+		req.URL.RawQuery = q.Encode()
+		w := httptest.NewRecorder()
+		urban.Handler(w, req)
 
-	defer res.Body.Close()
+		res := w.Result()
+		defer res.Body.Close()
+		body, _ := io.ReadAll(res.Body)
 
-	body, _ := io.ReadAll(res.Body)
-
-	stringConent := string(body)
-
-	assert.Equal(res.StatusCode, 200, "Should return 200")
-	assert.NotEmpty(stringConent, "Should not be empty")
-}
-
-func TestTermSearch(t *testing.T) {
-	assert := assert.New(t)
-
-	res, err := http.Get("http://localhost:3000/api/urban?term=glizzy&channel=test")
-
-	assert.Nil(err)
-
-	defer res.Body.Close()
-
-	body, _ := io.ReadAll(res.Body)
-
-	stringConent := string(body)
-
-	assert.Equal(res.StatusCode, 200, "Should return 200")
-	assert.NotEmpty(stringConent, "Should not be empty")
-}
-
-func TestNoTermSearch(t *testing.T) {
-	assert := assert.New(t)
-
-	res, err := http.Get("http://localhost:3000/api/urban")
-
-	assert.Nil(err)
-
-	defer res.Body.Close()
-
-	body, _ := io.ReadAll(res.Body)
-
-	stringConent := string(body)
-
-	assert.Equal(res.StatusCode, 200, "Should return 200")
-	assert.NotEmpty(stringConent, "Should not be empty")
+		assert.Equal(t, res.Header.Get("content-type"), "text/plain")
+		assert.Equal(t, res.StatusCode, 200, "Should return 200")
+		assert.NotEmpty(t, body, "Should not be empty")
+	})
 }

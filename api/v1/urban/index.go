@@ -19,17 +19,18 @@ import (
 const (
 	CACHE_TIME        = "604800"
 	CACHE_RANDOM_TIME = "10"
+	BASE_URL          = "https://api.urbandictionary.com/v0"
 )
 
 var logger = slog.New(multilogger.NewHandler(os.Stdout))
 
 func Handler(writer http.ResponseWriter, request *http.Request) {
 	ctx, wg := multilogger.SetupContext(&multilogger.SetupOps{
-		Request:        request,
-		BaselimeApiKey: os.Getenv("BASELIME_API_KEY"),
-        BetterStackApiKey: os.Getenv("BETTERSTACK_API_KEY"),
-		AxiomApiKey:    os.Getenv("AXIOM_API_KEY"),
-		ServiceName:    os.Getenv("VERCEL_GIT_REPO_SLUG"),
+		Request:           request,
+		BaselimeApiKey:    os.Getenv("BASELIME_API_KEY"),
+		BetterStackApiKey: os.Getenv("BETTERSTACK_API_KEY"),
+		AxiomApiKey:       os.Getenv("AXIOM_API_KEY"),
+		ServiceName:       os.Getenv("VERCEL_GIT_REPO_SLUG"),
 	})
 
 	defer func() {
@@ -37,10 +38,17 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		ctx.Done()
 	}()
 
+	writer.Header().Add("content-type", "text/plain")
 	logger.InfoContext(ctx, "processing request")
 	term := request.URL.Query().Get("term")
-	term, _ = url.QueryUnescape(term)
+	term, err := url.QueryUnescape(term)
 	term = strings.TrimSpace(term)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "Error unescaping query", "error", err.Error())
+		writer.Write([]byte(":( no definition found for: " + term))
+		return
+	}
 
 	atUser := ""
 	if len(term) > 0 {
@@ -55,6 +63,10 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 			term = ""
 
 			for _, word := range termSplitted {
+				if len(word) == 0 {
+					continue
+				}
+
 				if word[0] == '@' {
 					atUser = word + " "
 					continue
@@ -72,11 +84,16 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	if term == "" || hexValue == "f3a08080" {
 		isRandom = true
 		logger.InfoContext(ctx, "Querying random entry")
-		res, _ = http.Get("https://api.urbandictionary.com/v0/random")
+		res, err = http.Get(BASE_URL + "/random")
 	} else {
-		res, _ = http.Get("https://api.urbandictionary.com/v0/define?term=" + url.QueryEscape(term))
+		res, err = http.Get(BASE_URL + "/define?term=" + url.QueryEscape(term))
 	}
 
+	if err != nil {
+		logger.ErrorContext(ctx, "Error requesting urban API", "error", err.Error())
+		writer.Write([]byte(":( no definition found for: " + term))
+		return
+	}
 	if res.StatusCode != 200 {
 		writer.WriteHeader(res.StatusCode)
 
@@ -103,7 +120,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	if len(urbanDictRes.List) == 10 {
 		page := 2
 		for {
-			url := fmt.Sprintf("https://api.urbandictionary.com/v0/define?term=%s&page=%d",
+			url := fmt.Sprintf(BASE_URL+"/define?term=%s&page=%d",
 				url.QueryEscape(term),
 				page,
 			)
@@ -152,12 +169,8 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	if isRandom {
 		writer.Header().Set("Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
-		writer.Header().Set("CDN-Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
-		writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
 	} else {
 		writer.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
-		writer.Header().Set("CDN-Cache-Control", "public, max-age="+CACHE_TIME)
-		writer.Header().Set("Vercel-CDN-Cache-Control", "public, max-age="+CACHE_TIME)
 	}
 
 	writer.Write([]byte(word))
