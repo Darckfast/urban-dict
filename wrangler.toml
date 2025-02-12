@@ -4,3 +4,6 @@ compatibility_date = "2024-04-15"
 
 [build]
 command = "make build"
+
+[observability.logs]
+enabled = true

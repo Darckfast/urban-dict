@@ -14,6 +14,7 @@ import (
 	"urban-dict/pkg/utils"
 
 	multilogger "github.com/Darckfast/multi_logger/pkg/multi_logger"
+	"github.com/syumai/workers/cloudflare/fetch"
 )
 
 const (
@@ -81,14 +82,18 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	hexValue := fmt.Sprintf("%x", term)
 
 	isRandom := false
+	client := fetch.NewClient()
+
+	var req *fetch.Request
 	if term == "" || hexValue == "f3a08080" {
 		isRandom = true
 		logger.InfoContext(ctx, "Querying random entry")
-		res, err = http.Get(BASE_URL + "/random")
+		req, _ = fetch.NewRequest(request.Context(), "GET", BASE_URL+"/random", nil)
 	} else {
-		res, err = http.Get(BASE_URL + "/define?term=" + url.QueryEscape(term))
+		req, _ = fetch.NewRequest(request.Context(), "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
+	res, err = client.Do(req, nil)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error requesting urban API", "error", err.Error())
 		writer.Write([]byte(":( no definition found for: " + term))
@@ -124,7 +129,8 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 				url.QueryEscape(term),
 				page,
 			)
-			res, _ = http.Get(url)
+			req, _ = fetch.NewRequest(request.Context(), "GET", url, nil)
+			res, _ = client.Do(req, nil)
 
 			var pagination utils.UrbanDictRes
 
