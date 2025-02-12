@@ -2,6 +2,9 @@ name = "urban-dict"
 main = "./build/worker.mjs"
 compatibility_date = "2024-04-15"
 
+[vars]
+VERCEL_GIT_REPO_SLUG = "urban"
+
 [build]
 command = "make build"
 
