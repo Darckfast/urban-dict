@@ -1,6 +1,7 @@
 package urban
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,10 +11,12 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 
 	"urban-dict/pkg/utils"
 
 	multilogger "github.com/Darckfast/multi_logger/pkg/multi_logger"
+	"github.com/syumai/workers/cloudflare"
 	"github.com/syumai/workers/cloudflare/fetch"
 )
 
@@ -27,11 +30,27 @@ var logger = slog.New(multilogger.NewHandler(os.Stdout))
 
 func Handler(writer http.ResponseWriter, request *http.Request) {
 	ctx, wg := multilogger.SetupContext(&multilogger.SetupOps{
-		Request:           request,
-		BaselimeApiKey:    os.Getenv("BASELIME_API_KEY"),
-		BetterStackApiKey: os.Getenv("BETTERSTACK_API_KEY"),
-		AxiomApiKey:       os.Getenv("AXIOM_API_KEY"),
-		ServiceName:       os.Getenv("VERCEL_GIT_REPO_SLUG"),
+		Request:     request,
+		AxiomApiKey: cloudflare.Getenv("AXIOM_API_KEY"),
+		ServiceName: cloudflare.Getenv("VERCEL_GIT_REPO_SLUG"),
+		RequestGen: func(maxQueue chan int, wg *sync.WaitGroup, method, url, bearer string, body *[]byte) {
+			maxQueue <- 1
+			wg.Add(1)
+
+			req, _ := fetch.NewRequest(request.Context(), method, url, bytes.NewBuffer(*body))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Add("Authorization", bearer)
+
+			client := fetch.NewClient()
+
+			go func() {
+				defer wg.Done()
+
+				client.Do(req, nil)
+
+				<-maxQueue
+			}()
+		},
 	})
 
 	defer func() {
