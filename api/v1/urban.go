@@ -11,7 +11,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"sync"
 
 	"urban-dict/pkg/utils"
 
@@ -33,22 +32,20 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		Request:     request,
 		AxiomApiKey: cloudflare.Getenv("AXIOM_API_KEY"),
 		ServiceName: cloudflare.Getenv("VERCEL_GIT_REPO_SLUG"),
-		RequestGen: func(maxQueue chan int, wg *sync.WaitGroup, method, url, bearer string, body *[]byte) {
-			maxQueue <- 1
-			wg.Add(1)
+		RequestGen: func(args multilogger.SendLogsArgs) {
+			args.MaxQueue <- 1
+			args.Wg.Add(1)
 
-			req, _ := fetch.NewRequest(request.Context(), method, url, bytes.NewBuffer(*body))
+			req, _ := fetch.NewRequest(args.Ctx, args.Method, args.Url, bytes.NewBuffer(*args.Body))
 			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", bearer)
+			req.Header.Add("Authorization", args.Bearer)
 
 			client := fetch.NewClient()
 
 			go func() {
-				defer wg.Done()
-
+				defer args.Wg.Done()
 				client.Do(req, nil)
-
-				<-maxQueue
+				<-args.MaxQueue
 			}()
 		},
 	})
