@@ -10,5 +10,8 @@ import (
 
 func main() {
 	http.HandleFunc("GET /", urban.Handler)
+	http.HandleFunc("HEAD /", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	})
 	workers.Serve(nil)
 }
