@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	github.com/Darckfast/multi_logger v0.0.17
 	github.com/stretchr/testify v1.10.0
-	github.com/syumai/workers v0.27.0
+	github.com/syumai/workers v0.28.1
 )
 
 require (
