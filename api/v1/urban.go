@@ -55,8 +55,13 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		ctx.Done()
 	}()
 
-	logger.InfoContext(ctx, "processing request")
 	writer.Header().Add("content-type", "text/plain")
+	origin := request.Header.Get("Origin")
+
+	if origin != "" {
+		writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+	}
+
 	term := request.URL.Query().Get("term")
 	term, err := url.QueryUnescape(term)
 	term = strings.TrimSpace(term)
