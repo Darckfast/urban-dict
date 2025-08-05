@@ -121,13 +121,16 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if res.StatusCode != 200 {
-		writer.WriteHeader(res.StatusCode)
-
 		defer res.Body.Close()
-
 		body, _ := io.ReadAll(res.Body)
-		logger.ErrorContext(ctx, "Error calling urban api", "status", res.StatusCode, "error", string(body))
-		writer.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
+
+		if res.StatusCode == 503 {
+			logger.ErrorContext(ctx, "urban api is unavailable", "status", res.StatusCode, "error", string(body))
+			writer.Write([]byte("ops, seems like urban is unavailable"))
+		} else {
+			writer.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
+			logger.ErrorContext(ctx, "Error calling urban api", "status", res.StatusCode, "error", string(body))
+		}
 		return
 	}
 
