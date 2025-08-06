@@ -2,13 +2,12 @@ package main
 
 import (
 	"net/http"
-
-	urban "urban-dict/api/v1"
+	"urban-dict/pkg"
 
 	"github.com/syumai/workers"
 )
 
 func main() {
-	http.HandleFunc("GET /", urban.Handler)
+	http.HandleFunc("GET /", pkg.Handler)
 	workers.Serve(nil)
 }

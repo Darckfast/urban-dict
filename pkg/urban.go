@@ -1,4 +1,4 @@
-package urban
+package pkg
 
 import (
 	"bytes"
@@ -11,8 +11,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-
-	"urban-dict/pkg/utils"
 
 	multilogger "github.com/Darckfast/multi_logger/pkg/multi_logger"
 	"github.com/syumai/workers/cloudflare"
@@ -57,7 +55,6 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 	writer.Header().Add("content-type", "text/plain")
 	origin := request.Header.Get("Origin")
-
 	if origin != "" {
 		writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	}
