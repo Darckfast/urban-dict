@@ -9,7 +9,8 @@ assets = { directory = "./public/" }
 VERCEL_GIT_REPO_SLUG = "urban"
 
 [build]
-command = "make build"
+command = "pnpm run build"
+watch_dir = [ "pkg", "main.go"]
 
 [observability.logs]
 enabled = true
