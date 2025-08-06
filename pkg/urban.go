@@ -131,7 +131,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var urbanDictRes utils.UrbanDictRes
+	var urbanDictRes UrbanDictRes
 
 	json.NewDecoder(res.Body).Decode(&urbanDictRes)
 
@@ -153,7 +153,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 			req, _ = fetch.NewRequest(request.Context(), "GET", url, nil)
 			res, _ = client.Do(req, nil)
 
-			var pagination utils.UrbanDictRes
+			var pagination UrbanDictRes
 
 			json.NewDecoder(res.Body).Decode(&pagination)
 
