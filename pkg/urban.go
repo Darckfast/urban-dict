@@ -19,7 +19,7 @@ import (
 
 const (
 	CACHE_TIME        = "604800"
-	CACHE_RANDOM_TIME = "10"
+	CACHE_RANDOM_TIME = "604800"
 	BASE_URL          = "https://api.urbandictionary.com/v0"
 )
 
