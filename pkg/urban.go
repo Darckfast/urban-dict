@@ -1,18 +1,16 @@
 package pkg
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"sort"
 	"strings"
 
-	multilogger "github.com/Darckfast/multi_logger/pkg/multi_logger"
+	"github.com/Darckfast/axiom-log-this-go/pkg/logthis"
 	"github.com/syumai/workers/cloudflare"
 	"github.com/syumai/workers/cloudflare/fetch"
 )
@@ -23,49 +21,32 @@ const (
 	BASE_URL          = "https://api.urbandictionary.com/v0"
 )
 
-var logger = slog.New(multilogger.NewHandler(os.Stdout))
+var logger = logthis.NewLogger(&logthis.NewHandlerArgs{
+	Out:         os.Stdout,
+	ServiceName: "urban-dict",
+	AxiomApiKey: cloudflare.Getenv("AXIOM_API_KEY"),
+	Transport:   fetch.NewClient().HTTPClient(fetch.RedirectModeFollow).Transport,
+})
 
-func Handler(writer http.ResponseWriter, request *http.Request) {
-	ctx, wg := multilogger.SetupContext(&multilogger.SetupOps{
-		Request:     request,
-		AxiomApiKey: cloudflare.Getenv("AXIOM_API_KEY"),
-		ServiceName: cloudflare.Getenv("VERCEL_GIT_REPO_SLUG"),
-		RequestGen: func(args multilogger.SendLogsArgs) {
-			args.MaxQueue <- 1
-			args.Wg.Add(1)
+func Handler(w http.ResponseWriter, r *http.Request) {
+	wg, r := logthis.FromRequest(r)
+	ctx := r.Context()
 
-			req, _ := fetch.NewRequest(args.Ctx, args.Method, args.Url, bytes.NewBuffer(*args.Body))
-			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authorization", args.Bearer)
+	defer wg.Wait()
 
-			client := fetch.NewClient()
-
-			go func() {
-				defer args.Wg.Done()
-				client.Do(req, nil)
-				<-args.MaxQueue
-			}()
-		},
-	})
-
-	defer func() {
-		wg.Wait()
-		ctx.Done()
-	}()
-
-	writer.Header().Add("content-type", "text/plain")
-	origin := request.Header.Get("Origin")
+	w.Header().Add("content-type", "text/plain")
+	origin := r.Header.Get("Origin")
 	if origin != "" {
-		writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	}
 
-	term := request.URL.Query().Get("term")
+	term := r.URL.Query().Get("term")
 	term, err := url.QueryUnescape(term)
 	term = strings.TrimSpace(term)
 
 	if err != nil {
 		logger.ErrorContext(ctx, "Error unescaping query", "error", err.Error())
-		writer.Write([]byte(":( no definition found for: " + term))
+		w.Write([]byte(":( no definition found for: " + term))
 		return
 	}
 
@@ -106,15 +87,15 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	if term == "" || hexValue == "f3a08080" {
 		isRandom = true
 		logger.InfoContext(ctx, "Querying random entry")
-		req, _ = fetch.NewRequest(request.Context(), "GET", BASE_URL+"/random", nil)
+		req, _ = fetch.NewRequest(r.Context(), "GET", BASE_URL+"/random", nil)
 	} else {
-		req, _ = fetch.NewRequest(request.Context(), "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
+		req, _ = fetch.NewRequest(r.Context(), "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
 	res, err = client.Do(req, nil)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error requesting urban API", "error", err.Error())
-		writer.Write([]byte(":( no definition found for: " + term))
+		w.Write([]byte(":( no definition found for: " + term))
 		return
 	}
 	if res.StatusCode != 200 {
@@ -123,9 +104,9 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 
 		if res.StatusCode == 503 {
 			logger.ErrorContext(ctx, "urban api is unavailable", "status", res.StatusCode, "error", string(body))
-			writer.Write([]byte("ops, seems like urban is unavailable"))
+			w.Write([]byte("ops, seems like urban is unavailable"))
 		} else {
-			writer.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
+			w.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
 			logger.ErrorContext(ctx, "Error calling urban api", "status", res.StatusCode, "error", string(body))
 		}
 		return
@@ -136,8 +117,8 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 	json.NewDecoder(res.Body).Decode(&urbanDictRes)
 
 	if len(urbanDictRes.List) == 0 {
-		writer.WriteHeader(200)
-		writer.Write([]byte(":( no definition found for: " + term))
+		w.WriteHeader(200)
+		w.Write([]byte(":( no definition found for: " + term))
 		logger.InfoContext(ctx, "term searched but not found: "+term+", "+hexValue)
 
 		return
@@ -150,7 +131,7 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 				url.QueryEscape(term),
 				page,
 			)
-			req, _ = fetch.NewRequest(request.Context(), "GET", url, nil)
+			req, _ = fetch.NewRequest(r.Context(), "GET", url, nil)
 			res, _ = client.Do(req, nil)
 
 			var pagination UrbanDictRes
@@ -192,15 +173,15 @@ func Handler(writer http.ResponseWriter, request *http.Request) {
 		word = word[:397] + "..."
 	}
 
-	writer.WriteHeader(200)
+	w.WriteHeader(200)
 
 	if isRandom {
-		writer.Header().Set("Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
+		w.Header().Set("Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
 	} else {
-		writer.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
+		w.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
 	}
 
-	writer.Write([]byte(word))
+	w.Write([]byte(word))
 
 	logger.InfoContext(ctx, "request completed", "status", 200)
 }

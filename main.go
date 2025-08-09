@@ -9,5 +9,12 @@ import (
 
 func main() {
 	http.HandleFunc("GET /", pkg.Handler)
+	http.HandleFunc("OPTIONS /", func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+	})
+
 	workers.Serve(nil)
 }
