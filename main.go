@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"urban-dict/pkg"
 
-	"github.com/syumai/workers"
+	"github.com/Darckfast/workers-go/cloudflare/fetch"
 )
 
 func main() {
@@ -16,5 +16,7 @@ func main() {
 		}
 	})
 
-	workers.Serve(nil)
+	fetch.ServeNonBlock(nil)
+
+	<-make(chan struct{})
 }

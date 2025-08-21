@@ -6,33 +6,29 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"sort"
 	"strings"
+	"time"
 
-	"github.com/Darckfast/axiom-log-this-go/pkg/logthis"
-	"github.com/syumai/workers/cloudflare"
-	"github.com/syumai/workers/cloudflare/fetch"
+	logthis "github.com/Darckfast/axiom-log-this-go"
+	"github.com/Darckfast/workers-go/cloudflare/fetch"
 )
 
 const (
-	CACHE_TIME        = "604800"
-	CACHE_RANDOM_TIME = "604800"
-	BASE_URL          = "https://api.urbandictionary.com/v0"
+	CACHE_TIME = "604800"
+	BASE_URL   = "https://api.urbandictionary.com/v0"
 )
 
-var logger = logthis.NewLogger(&logthis.NewHandlerArgs{
-	Out:         os.Stdout,
-	ServiceName: "urban-dict",
-	AxiomApiKey: cloudflare.Getenv("AXIOM_API_KEY"),
-	Transport:   fetch.NewClient().HTTPClient(fetch.RedirectModeFollow).Transport,
-})
+var client = fetch.Client{
+	Timeout: 2 * time.Second,
+}
+var logger = logthis.NewLogger(client.Do)
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	wg, r := logthis.FromRequest(r)
+	r, _ = logthis.FromRequest(r)
 	ctx := r.Context()
 
-	defer wg.Wait()
+	defer logthis.Flush()
 
 	w.Header().Add("content-type", "text/plain")
 	origin := r.Header.Get("Origin")
@@ -80,19 +76,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	hexValue := fmt.Sprintf("%x", term)
 
-	isRandom := false
-	client := fetch.NewClient()
-
-	var req *fetch.Request
+	var req *http.Request
 	if term == "" || hexValue == "f3a08080" {
-		isRandom = true
 		logger.InfoContext(ctx, "Querying random entry")
-		req, _ = fetch.NewRequest(r.Context(), "GET", BASE_URL+"/random", nil)
+		req, _ = http.NewRequestWithContext(r.Context(), "GET", BASE_URL+"/random", nil)
 	} else {
-		req, _ = fetch.NewRequest(r.Context(), "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
+		req, _ = http.NewRequestWithContext(r.Context(), "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
-	res, err = client.Do(req, nil)
+	res, err = client.Do(req)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error requesting urban API", "error", err.Error())
 		w.Write([]byte(":( no definition found for: " + term))
@@ -131,8 +123,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 				url.QueryEscape(term),
 				page,
 			)
-			req, _ = fetch.NewRequest(r.Context(), "GET", url, nil)
-			res, _ = client.Do(req, nil)
+			req, _ = http.NewRequestWithContext(r.Context(), "GET", url, nil)
+			res, _ = client.Do(req)
 
 			var pagination UrbanDictRes
 
@@ -174,12 +166,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-
-	if isRandom {
-		w.Header().Set("Cache-Control", "public, max-age="+CACHE_RANDOM_TIME)
-	} else {
-		w.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
-	}
+	w.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
 
 	w.Write([]byte(word))
 
