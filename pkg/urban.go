@@ -94,13 +94,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		defer res.Body.Close()
 		body, _ := io.ReadAll(res.Body)
 
-		if res.StatusCode == 503 {
+		if res.StatusCode >= 500 {
 			logger.ErrorContext(ctx, "urban api is unavailable", "status", res.StatusCode, "error", string(body))
 			w.Write([]byte("ops, seems like urban is unavailable"))
-		} else {
-			w.Write([]byte("ops, something went wrong, wake up @darckfast and fix this"))
-			logger.ErrorContext(ctx, "Error calling urban api", "status", res.StatusCode, "error", string(body))
 		}
+
 		return
 	}
 
@@ -161,13 +159,20 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	definition = strings.ReplaceAll(definition, "]", "")
 	word := fmt.Sprintf("%s%s: %s", atUser, urbanDictRes.List[0].Word, definition)
 
+	if strings.HasPrefix(word, "/") {
+		strings.Replace(word, "/", "", 1)
+	}
+
+	if strings.HasPrefix(word, "!") {
+		strings.Replace(word, "!", "", 1)
+	}
+
 	if len(word) > 400 {
 		word = word[:397] + "..."
 	}
 
 	w.WriteHeader(200)
 	w.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
-
 	w.Write([]byte(word))
 
 	logger.InfoContext(ctx, "request completed", "status", 200)
