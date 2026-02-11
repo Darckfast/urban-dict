@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -22,13 +24,11 @@ const (
 var client = fetch.Client{
 	Timeout: 2 * time.Second,
 }
-var logger = logthis.NewLogger(client.Do)
+var logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	r, _ = logthis.FromRequest(r)
 	ctx := r.Context()
-
-	defer logthis.Flush()
 
 	w.Header().Add("content-type", "text/plain")
 	origin := r.Header.Get("Origin")

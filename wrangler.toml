@@ -13,3 +13,6 @@ watch_dir = [ "pkg", "main.go"]
 
 [observability.logs]
 enabled = true
+
+[[tail_consumers]]
+service = "axiom-tail-worker"
