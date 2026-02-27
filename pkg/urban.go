@@ -1,9 +1,12 @@
+//go:build js && wasm
+
 package pkg
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sort"
@@ -12,7 +15,6 @@ import (
 
 	logthis "github.com/Darckfast/axiom-log-this-go"
 	"github.com/Darckfast/workers-go/cloudflare/fetch"
-	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
 const (
@@ -24,8 +26,9 @@ var client = fetch.Client{
 	Timeout: 3 * time.Second,
 }
 
+var logger = slog.New(&slog.JSONHandler{})
+
 func Handler(w http.ResponseWriter, r *http.Request) {
-	logger := otelslog.NewLogger("urban")
 	r, _ = logthis.FromRequest(r)
 	ctx := r.Context()
 
