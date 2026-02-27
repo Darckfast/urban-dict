@@ -1,5 +1,6 @@
 import app from "./bin/app.wasm";
 import "./bin/wasm_exec.js";
+import './instrumentation.js';
 
 globalThis.cf = {}
 globalThis.tryCatch = (fn) => {
