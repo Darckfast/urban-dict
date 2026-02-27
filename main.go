@@ -17,7 +17,7 @@ func main() {
 		err = errors.Join(err, otelShutdown(context.Background()))
 	}()
 
-	http.HandleFunc("GET /", otelhttp.NewHandler(pkg.Handler))
+	http.Handle("GET /", otelhttp.NewHandler(http.HandlerFunc(pkg.Handler), "get-entry"))
 	http.HandleFunc("OPTIONS /", func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 		if origin != "" {
