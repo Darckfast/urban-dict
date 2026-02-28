@@ -1,6 +1,5 @@
 import app from "./bin/app.wasm";
 import "./bin/wasm_exec.js";
-import './instrumentation.js';
 
 globalThis.cf = {}
 globalThis.tryCatch = (fn) => {
@@ -21,6 +20,8 @@ globalThis.tryCatch = (fn) => {
         };
     }
 }
+
+
 
 function init() {
     const go = new Go()
