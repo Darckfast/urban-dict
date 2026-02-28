@@ -6,15 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
 
-	logthis "github.com/Darckfast/axiom-log-this-go"
 	"github.com/Darckfast/workers-go/cloudflare/fetch"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
 const (
@@ -26,11 +25,9 @@ var client = fetch.Client{
 	Timeout: 3 * time.Second,
 }
 
-var logger = slog.New(&slog.JSONHandler{})
-
 func Handler(w http.ResponseWriter, r *http.Request) {
-	r, _ = logthis.FromRequest(r)
 	ctx := r.Context()
+	logger := otelslog.NewLogger("urban")
 
 	w.Header().Add("content-type", "text/plain")
 	origin := r.Header.Get("Origin")
@@ -81,9 +78,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	var req *http.Request
 	if term == "" || hexValue == "f3a08080" {
 		logger.InfoContext(ctx, "Querying random entry")
-		req, _ = http.NewRequestWithContext(r.Context(), "GET", BASE_URL+"/random", nil)
+		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/random", nil)
 	} else {
-		req, _ = http.NewRequestWithContext(r.Context(), "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
+		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
 	res, err = client.Do(req)
