@@ -80,6 +80,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		logger.InfoContext(ctx, "Querying random entry")
 		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/random", nil)
 	} else {
+		logger.InfoContext(ctx, "Querying entry"+term)
 		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
