@@ -1,9 +1,13 @@
 {
     "name": "urban-dict",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "keywords": [],
-    "author": "",
-    "license": "MIT"
+    "main": "main.ts",
+    "scripts": {
+        "build": "GOOS=js GOARCH=wasm go build -o ./bin/app.wasm ."
+    },
+    "author": "darckfast",
+    "license": "MIT",
+    "devDependencies": {
+        "wrangler": "^4.98.0"
+    }
 }
