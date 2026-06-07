@@ -13,6 +13,7 @@ import (
 	"codeberg.org/darckfast/workers-go/platform/cloudflare/fetch"
 	"codeberg.org/darckfast/workers-go/platform/cloudflare/lifecycle"
 	"github.com/julienschmidt/httprouter"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 
 	router := httprouter.New()
 
-	router.HandlerFunc("GET", "/api/urban", pkg.Handler)
+	router.Handler("GET", "/api/urban", otelhttp.NewHandler(http.HandlerFunc(pkg.Handler), "/"))
 	router.HandlerFunc("OPTIONS", "/api/urban", func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 		if origin != "" {
