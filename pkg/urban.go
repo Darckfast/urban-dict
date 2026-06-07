@@ -3,15 +3,18 @@
 package pkg
 
 import (
-	"encoding/json"
-	"fmt"
+	"encoding/hex"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
+	"codeberg.org/darckfast/workers-go/platform/cloudflare/fetch"
+	"github.com/mailru/easyjson"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
@@ -22,7 +25,7 @@ const (
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	logger := otelslog.NewLogger("urban")
+	slog.SetDefault(otelslog.NewLogger("urban"))
 
 	w.Header().Add("content-type", "text/plain")
 	origin := r.Header.Get("Origin")
@@ -35,7 +38,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	term = strings.TrimSpace(term)
 
 	if err != nil {
-		logger.ErrorContext(ctx, "Error unescaping query", "error", err.Error())
+		slog.ErrorContext(ctx, "Error unescaping query", "error", err.Error())
 		w.Write([]byte(":( no definition found for: " + term))
 		return
 	}
@@ -68,33 +71,38 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	var res *http.Response
 
-	hexValue := fmt.Sprintf("%x", term)
+	hexValue := hex.EncodeToString([]byte(term))
 
 	var req *http.Request
 	if term == "" || hexValue == "f3a08080" {
-		logger.InfoContext(ctx, "Querying random entry")
-		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/random", nil)
+		slog.InfoContext(ctx, "Querying random entry")
+		req, err = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/random", nil)
+
+		if err != nil {
+			slog.ErrorContext(ctx, "error creating request", "err", err)
+		}
 	} else {
-		logger.InfoContext(ctx, "Querying entry"+term)
+		slog.InfoContext(ctx, "Querying entry"+term)
 		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
-	client := http.Client{
+	client := &fetch.Client{
 		Timeout: 2 * time.Second,
 	}
 
 	res, err = client.Do(req)
 	if err != nil {
-		logger.ErrorContext(ctx, "Error requesting urban API", "error", err.Error())
+		slog.ErrorContext(ctx, "Error requesting urban API", "error", err.Error())
 		w.Write([]byte(":( no definition found for: " + term))
 		return
 	}
+
 	if res.StatusCode != 200 {
-		defer res.Body.Close()
 		body, _ := io.ReadAll(res.Body)
+		res.Body.Close()
 
 		if res.StatusCode >= 500 {
-			logger.ErrorContext(ctx, "urban api is unavailable", "status", res.StatusCode, "error", string(body))
+			slog.ErrorContext(ctx, "urban api is unavailable", "status", res.StatusCode, "error", string(body))
 			w.Write([]byte("ops, seems like urban is unavailable"))
 		}
 
@@ -102,13 +110,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var urbanDictRes UrbanDictRes
-
-	json.NewDecoder(res.Body).Decode(&urbanDictRes)
+	easyjson.UnmarshalFromReader(res.Body, &urbanDictRes)
+	res.Body.Close()
 
 	if len(urbanDictRes.List) == 0 {
 		w.WriteHeader(200)
 		w.Write([]byte(":( no definition found for: " + term))
-		logger.InfoContext(ctx, "term searched but not found: "+term+", "+hexValue)
+		slog.InfoContext(ctx, "term searched but not found: "+term+", "+hexValue)
 
 		return
 	}
@@ -116,16 +124,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	if len(urbanDictRes.List) == 10 {
 		page := 2
 		for {
-			url := fmt.Sprintf(BASE_URL+"/define?term=%s&page=%d",
-				url.QueryEscape(term),
-				page,
-			)
+			url := BASE_URL + "/define?term=" + url.QueryEscape(term) + "&page=" + strconv.Itoa(page)
 			req, _ = http.NewRequestWithContext(r.Context(), "GET", url, nil)
-			res, _ = client.Do(req)
+			res, err = client.Do(req)
+
+			if err != nil {
+				slog.ErrorContext(ctx, "error requesting Urban API", "err", err)
+				break
+			}
 
 			var pagination UrbanDictRes
-
-			json.NewDecoder(res.Body).Decode(&pagination)
+			easyjson.UnmarshalFromReader(res.Body, &pagination)
+			res.Body.Close()
 
 			urbanDictRes.List = append(urbanDictRes.List, pagination.List...)
 
@@ -156,7 +166,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	definition := urbanDictRes.List[0].Definition
 	definition = strings.ReplaceAll(definition, "[", "")
 	definition = strings.ReplaceAll(definition, "]", "")
-	word := fmt.Sprintf("%s%s: %s", atUser, urbanDictRes.List[0].Word, definition)
+	word := atUser + urbanDictRes.List[0].Word + ": " + definition
 
 	if strings.HasPrefix(word, "/") {
 		strings.Replace(word, "/", "", 1)
@@ -174,5 +184,5 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "public, max-age="+CACHE_TIME)
 	w.Write([]byte(word))
 
-	logger.InfoContext(ctx, "request completed", "status", 200)
+	slog.InfoContext(ctx, "request completed", "status", 200)
 }
