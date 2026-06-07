@@ -4,3 +4,4 @@ build
 node_modules
 .wrangler
 *.wasm
+wasm_exec.js
