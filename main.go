@@ -5,35 +5,39 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"urban-dict/pkg"
 	"urban-dict/pkg/otel"
 
 	"codeberg.org/darckfast/workers-go/platform/cloudflare/fetch"
 	"codeberg.org/darckfast/workers-go/platform/cloudflare/lifecycle"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
 	otelShutdown, err := otel.SetupOTelSDK()
 
 	if err != nil {
-		panic(err)
+		slog.Error("error setting otel", "err", err)
+		// panic(err)
 	}
 
 	defer lifecycle.Ctx.WaitUntil(func() error {
 		return errors.Join(err, otelShutdown(context.Background()))
 	})
 
-	http.Handle("GET /", otelhttp.NewHandler(http.HandlerFunc(pkg.Handler), "get-entry"))
-	http.HandleFunc("OPTIONS /", func(w http.ResponseWriter, r *http.Request) {
+	router := httprouter.New()
+
+	router.HandlerFunc("GET", "/", pkg.Handler)
+	router.HandlerFunc("OPTIONS", "/", func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 		if origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 	})
 
-	fetch.ServeNonBlock(nil)
+	fetch.ServeNonBlock(router)
 
 	<-make(chan struct{})
 }
