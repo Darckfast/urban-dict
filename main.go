@@ -9,8 +9,8 @@ import (
 	"urban-dict/pkg"
 	"urban-dict/pkg/otel"
 
-	"github.com/Darckfast/workers-go/cloudflare/fetch"
-	"github.com/Darckfast/workers-go/cloudflare/lifecycle"
+	"codeberg.org/darckfast/workers-go/platform/cloudflare/fetch"
+	"codeberg.org/darckfast/workers-go/platform/cloudflare/lifecycle"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 

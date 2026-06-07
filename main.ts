@@ -1,31 +1,44 @@
 import app from "./bin/app.wasm";
 import "./bin/wasm_exec.js";
 
-globalThis.cf = {}
-globalThis.tryCatch = (fn) => {
+globalThis.tryCatch = (o, fn, args) => {
     try {
-        return {
-            data: fn(),
-        };
-    } catch (error) {
-        if (!(error instanceof Error)) {
-            if (error instanceof Object) {
-                error = JSON.stringify(error)
-            }
-
-            error = new Error(error || 'no error message')
+        if (fn) {
+            return { data: o[fn](...args) };
         }
-        return {
-            error,
-        };
+
+        return { data: o(...args) };
+    } catch (err) {
+        if (!(err instanceof Error)) {
+            if (err instanceof Object) {
+                err = JSON.stringify(err);
+            }
+            err = new Error(err || "no error message");
+        }
+        return { error: err };
     }
-}
+};
 
+let initiliazed = false;
 
+let go = new Go();
+let instance = new WebAssembly.Instance(app, go.importObject);
 
 function init() {
-    const go = new Go()
-    go.run(new WebAssembly.Instance(app, go.importObject))
+    if (!initiliazed) {
+        go.run(instance).finally(() => {
+            initiliazed = false;
+            instance = new WebAssembly.Instance(app, go.importObject);
+        });
+        initiliazed = true;
+    }
+
+    if (go.exited) {
+        go = new Go();
+        go.run(instance).finally(() => {
+            instance = new WebAssembly.Instance(app, go.importObject);
+        });
+    }
 }
 
 async function fetch(req: Request, env: Env, ctx: ExecutionContext) {

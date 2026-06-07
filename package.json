@@ -3,14 +3,7 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
-    "scripts": {
-        "build": "GOOS=js GOARCH=wasm go build -o ./bin/app.wasm .",
-        "deploy": "wrangler deploy",
-        "dev": "wrangler dev --show-interactive-dev-session false --port 5173",
-        "start": "wrangler dev --show-interactive-dev-session false"
-    },
     "keywords": [],
     "author": "",
-    "license": "ISC",
-    "packageManager": "pnpm@10.14.0"
+    "license": "MIT"
 }

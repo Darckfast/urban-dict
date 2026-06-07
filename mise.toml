@@ -1,0 +1,17 @@
+[tools]
+go = "1.24"
+node = "26"
+wrangler = "4.95.0"
+
+[tasks.build]
+run = """
+  cp $(go env GOROOT)/lib/wasm/wasm_exec.js ./bin/wasm_exec.js
+  GOOS=js GOARCH=wasm go build -o ./bin/app.wasm .
+"""
+
+[tasks.deploy]
+run = "wrangler deploy"
+
+[tasks.dev]
+depends = ["build"]
+run = "wrangler dev --show-interactive-dev-session false --port 5173"

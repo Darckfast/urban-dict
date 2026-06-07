@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Darckfast/workers-go/cloudflare/fetch"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
@@ -20,10 +19,6 @@ const (
 	CACHE_TIME = "604800"
 	BASE_URL   = "https://api.urbandictionary.com/v0"
 )
-
-var client = fetch.Client{
-	Timeout: 3 * time.Second,
-}
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -82,6 +77,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		logger.InfoContext(ctx, "Querying entry"+term)
 		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
+	}
+
+	client := http.Client{
+		Timeout: 2 * time.Second,
 	}
 
 	res, err = client.Do(req)
