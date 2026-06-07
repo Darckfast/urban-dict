@@ -20,7 +20,6 @@ func main() {
 
 	if err != nil {
 		slog.Error("error setting otel", "err", err)
-		// panic(err)
 	}
 
 	defer lifecycle.Ctx.WaitUntil(func() error {
@@ -29,8 +28,8 @@ func main() {
 
 	router := httprouter.New()
 
-	router.HandlerFunc("GET", "/", pkg.Handler)
-	router.HandlerFunc("OPTIONS", "/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandlerFunc("GET", "/api/urban", pkg.Handler)
+	router.HandlerFunc("OPTIONS", "/api/urban", func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 		if origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
