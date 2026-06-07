@@ -4,6 +4,7 @@ package pkg
 
 import "time"
 
+//easyjson:json
 type UrbanDictRes struct {
 	List []struct {
 		Definition    string    `json:"definition"`
