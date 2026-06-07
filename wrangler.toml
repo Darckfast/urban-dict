@@ -8,10 +8,6 @@ compatibility_flags = [ "nodejs_compat" ]
 [vars]
 SERVICE_NAME = "urban-dict"
 
-[build]
-command = "mise build"
-watch_dir = [ "pkg", "main.go"]
-
 [observability.logs]
 enabled = true
 
