@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/darckfast/workers-go/platform/cloudflare/fetch"
 	"github.com/mailru/easyjson"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
@@ -86,8 +85,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
-	client := &fetch.Client{
-		Timeout: 2 * time.Second,
+	client := http.Client{
+		Timeout:   2 * time.Second,
+		Transport: http.DefaultTransport,
 	}
 
 	res, err = client.Do(req)
