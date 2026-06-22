@@ -122,7 +122,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(urbanDictRes.List) == 10 {
+	if len(urbanDictRes.List) == 10 && term != "" {
 		page := 2
 		for {
 			url := BASE_URL + "/define?term=" + url.QueryEscape(term) + "&page=" + strconv.Itoa(page)
