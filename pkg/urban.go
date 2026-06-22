@@ -126,11 +126,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		page := 2
 		for {
 			url := BASE_URL + "/define?term=" + url.QueryEscape(term) + "&page=" + strconv.Itoa(page)
-			req, _ = http.NewRequestWithContext(r.Context(), "GET", url, nil)
+			req, _ = http.NewRequestWithContext(ctx, "GET", url, nil)
 			res, err = client.Do(req)
 
 			if err != nil {
 				slog.ErrorContext(ctx, "error requesting Urban API", "err", err)
+				break
+			}
+
+			if res.StatusCode > 299 {
+				body, _ := io.ReadAll(res.Body)
+				res.Body.Close()
+				slog.ErrorContext(ctx, "Urban API returned non 2xx", "err", string(body))
 				break
 			}
 
