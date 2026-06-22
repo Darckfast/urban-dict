@@ -1,4 +1,5 @@
 .vercel
+bin
 .env
 build
 node_modules

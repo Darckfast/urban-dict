@@ -1,16 +1,12 @@
 name = "urban-dict"
-main = "./main.ts"
+main = "bin/main.ts"
 compatibility_date = "2026-05-26"
-workers_dev = true
-preview_urls = true
+workers_dev = false
+preview_urls = false
 compatibility_flags = [ "nodejs_compat" ]
 
 [build]
-command = "mise build --tiny"
-watch_dir = ["pkg", "main.go"]
-
-[vars]
-SERVICE_NAME = "urban-dict"
+command = "go install codeberg.org/darckfast/workers-go/cmd/workers-go@latest && workers-go -i . -tiny"
 
 [observability.logs]
 enabled = true
