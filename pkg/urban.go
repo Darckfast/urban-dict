@@ -15,6 +15,7 @@ import (
 
 	"github.com/mailru/easyjson"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
 )
 
 const (
@@ -102,8 +103,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(res.Body)
 		res.Body.Close()
 
+		slog.ErrorContext(ctx, "urban api return non 2XX", "status", res.StatusCode, "error", string(body))
 		if res.StatusCode >= 500 {
-			slog.ErrorContext(ctx, "urban api is unavailable", "status", res.StatusCode, "error", string(body))
 			w.Write([]byte("ops, seems like urban is unavailable"))
 		}
 
