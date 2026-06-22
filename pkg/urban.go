@@ -23,7 +23,8 @@ const (
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := otel.Tracer("trace").Start(r.Context(), "http.server")
+	defer span.End()
 	slog.SetDefault(otelslog.NewLogger("urban"))
 
 	w.Header().Add("content-type", "text/plain")
