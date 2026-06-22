@@ -1,8 +1,6 @@
 module urban-dict
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.25.0
 
 require (
 	codeberg.org/darckfast/workers-go v0.4.3
@@ -10,11 +8,11 @@ require (
 	github.com/mailru/easyjson v0.9.2
 	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0
-	go.opentelemetry.io/otel v1.40.0
+	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.16.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.40.0
 	go.opentelemetry.io/otel/log v0.16.0
-	go.opentelemetry.io/otel/sdk v1.40.0
+	go.opentelemetry.io/otel/sdk v1.44.0
 	go.opentelemetry.io/otel/sdk/log v0.16.0
 )
 
@@ -26,7 +24,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel/metric v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.44.0 // indirect
+	go.opentelemetry.io/otel/trace v1.44.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 )
