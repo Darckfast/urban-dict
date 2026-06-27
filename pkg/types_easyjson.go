@@ -7,7 +7,6 @@ import (
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
-	time "time"
 )
 
 // suppress unused package warning
@@ -40,55 +39,20 @@ func easyjson6601e8cdDecodeUrbanDictPkg(in *jlexer.Lexer, out *UrbanDictRes) {
 				in.Delim('[')
 				if out.List == nil {
 					if !in.IsDelim(']') {
-						out.List = make([]struct {
-							Definition    string    `json:"definition"`
-							Permalink     string    `json:"permalink"`
-							ThumbsUp      int       `json:"thumbs_up"`
-							Author        string    `json:"author"`
-							Word          string    `json:"word"`
-							Defid         int       `json:"defid"`
-							CurrentVote   string    `json:"current_vote"`
-							WrittenOn     time.Time `json:"written_on"`
-							Example       string    `json:"example"`
-							ThumbsDown    int       `json:"thumbs_down"`
-							Score         int
-							OriginalIndex int
-						}, 0, 0)
+						out.List = make([]ResultList, 0, 1)
 					} else {
-						out.List = []struct {
-							Definition    string    `json:"definition"`
-							Permalink     string    `json:"permalink"`
-							ThumbsUp      int       `json:"thumbs_up"`
-							Author        string    `json:"author"`
-							Word          string    `json:"word"`
-							Defid         int       `json:"defid"`
-							CurrentVote   string    `json:"current_vote"`
-							WrittenOn     time.Time `json:"written_on"`
-							Example       string    `json:"example"`
-							ThumbsDown    int       `json:"thumbs_down"`
-							Score         int
-							OriginalIndex int
-						}{}
+						out.List = []ResultList{}
 					}
 				} else {
 					out.List = (out.List)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 struct {
-						Definition    string    `json:"definition"`
-						Permalink     string    `json:"permalink"`
-						ThumbsUp      int       `json:"thumbs_up"`
-						Author        string    `json:"author"`
-						Word          string    `json:"word"`
-						Defid         int       `json:"defid"`
-						CurrentVote   string    `json:"current_vote"`
-						WrittenOn     time.Time `json:"written_on"`
-						Example       string    `json:"example"`
-						ThumbsDown    int       `json:"thumbs_down"`
-						Score         int
-						OriginalIndex int
+					var v1 ResultList
+					if in.IsNull() {
+						in.Skip()
+					} else {
+						(v1).UnmarshalEasyJSON(in)
 					}
-					easyjson6601e8cdDecode(in, &v1)
 					out.List = append(out.List, v1)
 					in.WantComma()
 				}
@@ -118,7 +82,7 @@ func easyjson6601e8cdEncodeUrbanDictPkg(out *jwriter.Writer, in UrbanDictRes) {
 				if v2 > 0 {
 					out.RawByte(',')
 				}
-				easyjson6601e8cdEncode(out, v3)
+				(v3).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -135,20 +99,7 @@ func (v UrbanDictRes) MarshalEasyJSON(w *jwriter.Writer) {
 func (v *UrbanDictRes) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6601e8cdDecodeUrbanDictPkg(l, v)
 }
-func easyjson6601e8cdDecode(in *jlexer.Lexer, out *struct {
-	Definition    string    `json:"definition"`
-	Permalink     string    `json:"permalink"`
-	ThumbsUp      int       `json:"thumbs_up"`
-	Author        string    `json:"author"`
-	Word          string    `json:"word"`
-	Defid         int       `json:"defid"`
-	CurrentVote   string    `json:"current_vote"`
-	WrittenOn     time.Time `json:"written_on"`
-	Example       string    `json:"example"`
-	ThumbsDown    int       `json:"thumbs_down"`
-	Score         int
-	OriginalIndex int
-}) {
+func easyjson6601e8cdDecodeUrbanDictPkg1(in *jlexer.Lexer, out *ResultList) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -168,23 +119,11 @@ func easyjson6601e8cdDecode(in *jlexer.Lexer, out *struct {
 			} else {
 				out.Definition = string(in.String())
 			}
-		case "permalink":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.Permalink = string(in.String())
-			}
 		case "thumbs_up":
 			if in.IsNull() {
 				in.Skip()
 			} else {
 				out.ThumbsUp = int(in.Int())
-			}
-		case "author":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.Author = string(in.String())
 			}
 		case "word":
 			if in.IsNull() {
@@ -192,49 +131,17 @@ func easyjson6601e8cdDecode(in *jlexer.Lexer, out *struct {
 			} else {
 				out.Word = string(in.String())
 			}
-		case "defid":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.Defid = int(in.Int())
-			}
-		case "current_vote":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.CurrentVote = string(in.String())
-			}
-		case "written_on":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				if data := in.Raw(); in.Ok() {
-					in.AddError((out.WrittenOn).UnmarshalJSON(data))
-				}
-			}
-		case "example":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.Example = string(in.String())
-			}
 		case "thumbs_down":
 			if in.IsNull() {
 				in.Skip()
 			} else {
 				out.ThumbsDown = int(in.Int())
 			}
-		case "Score":
+		case "score":
 			if in.IsNull() {
 				in.Skip()
 			} else {
 				out.Score = int(in.Int())
-			}
-		case "OriginalIndex":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.OriginalIndex = int(in.Int())
 			}
 		default:
 			in.SkipRecursive()
@@ -246,20 +153,7 @@ func easyjson6601e8cdDecode(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson6601e8cdEncode(out *jwriter.Writer, in struct {
-	Definition    string    `json:"definition"`
-	Permalink     string    `json:"permalink"`
-	ThumbsUp      int       `json:"thumbs_up"`
-	Author        string    `json:"author"`
-	Word          string    `json:"word"`
-	Defid         int       `json:"defid"`
-	CurrentVote   string    `json:"current_vote"`
-	WrittenOn     time.Time `json:"written_on"`
-	Example       string    `json:"example"`
-	ThumbsDown    int       `json:"thumbs_down"`
-	Score         int
-	OriginalIndex int
-}) {
+func easyjson6601e8cdEncodeUrbanDictPkg1(out *jwriter.Writer, in ResultList) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -268,16 +162,6 @@ func easyjson6601e8cdEncode(out *jwriter.Writer, in struct {
 		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Definition))
-	}
-	if in.Permalink != "" {
-		const prefix string = ",\"permalink\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Permalink))
 	}
 	if in.ThumbsUp != 0 {
 		const prefix string = ",\"thumbs_up\":"
@@ -289,16 +173,6 @@ func easyjson6601e8cdEncode(out *jwriter.Writer, in struct {
 		}
 		out.Int(int(in.ThumbsUp))
 	}
-	if in.Author != "" {
-		const prefix string = ",\"author\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Author))
-	}
 	if in.Word != "" {
 		const prefix string = ",\"word\":"
 		if first {
@@ -308,46 +182,6 @@ func easyjson6601e8cdEncode(out *jwriter.Writer, in struct {
 			out.RawString(prefix)
 		}
 		out.String(string(in.Word))
-	}
-	if in.Defid != 0 {
-		const prefix string = ",\"defid\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Int(int(in.Defid))
-	}
-	if in.CurrentVote != "" {
-		const prefix string = ",\"current_vote\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.CurrentVote))
-	}
-	if true {
-		const prefix string = ",\"written_on\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Raw((in.WrittenOn).MarshalJSON())
-	}
-	if in.Example != "" {
-		const prefix string = ",\"example\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Example))
 	}
 	if in.ThumbsDown != 0 {
 		const prefix string = ",\"thumbs_down\":"
@@ -360,7 +194,7 @@ func easyjson6601e8cdEncode(out *jwriter.Writer, in struct {
 		out.Int(int(in.ThumbsDown))
 	}
 	if in.Score != 0 {
-		const prefix string = ",\"Score\":"
+		const prefix string = ",\"score\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -369,15 +203,15 @@ func easyjson6601e8cdEncode(out *jwriter.Writer, in struct {
 		}
 		out.Int(int(in.Score))
 	}
-	if in.OriginalIndex != 0 {
-		const prefix string = ",\"OriginalIndex\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Int(int(in.OriginalIndex))
-	}
 	out.RawByte('}')
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ResultList) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson6601e8cdEncodeUrbanDictPkg1(w, v)
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *ResultList) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson6601e8cdDecodeUrbanDictPkg1(l, v)
 }

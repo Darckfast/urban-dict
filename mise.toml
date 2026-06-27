@@ -1,5 +1,7 @@
 [tools]
 go = "1.24"
+golangci-lint = "2.12"
 node = "24"
 pnpm = "11"
 tinygo = "0.41.1"
+wrangler = { version = "latest", allow_builds = ["esbuild", "sharp", "workerd"] }

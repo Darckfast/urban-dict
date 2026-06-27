@@ -125,6 +125,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	if len(urbanDictRes.List) == 10 && term != "" {
 		page := 2
+
 		for {
 			url := BASE_URL + "/define?term=" + url.QueryEscape(term) + "&page=" + strconv.Itoa(page)
 			req, _ = http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -133,27 +134,23 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				slog.ErrorContext(ctx, "error requesting Urban API", "err", err)
 				break
-			}
-
-			if res.StatusCode > 299 {
+			} else if res.StatusCode > 299 {
 				body, _ := io.ReadAll(res.Body)
 				res.Body.Close()
 				slog.ErrorContext(ctx, "Urban API returned non 2xx", "err", string(body))
 				break
+			} else {
+				var pagination UrbanDictRes
+				easyjson.UnmarshalFromReader(res.Body, &pagination)
+				res.Body.Close()
+				urbanDictRes.List = append(urbanDictRes.List, pagination.List...)
+				if len(pagination.List) != 10 {
+					break
+				}
 			}
 
-			var pagination UrbanDictRes
-			easyjson.UnmarshalFromReader(res.Body, &pagination)
-			res.Body.Close()
-
-			urbanDictRes.List = append(urbanDictRes.List, pagination.List...)
-
-			if len(pagination.List) != 10 {
-				break
-			}
-			page = page + 1
-
-			if page == 3 {
+			page++
+			if page >= 3 {
 				break
 			}
 		}
@@ -161,10 +158,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	for i, entry := range urbanDictRes.List {
 		if entry.ThumbsDown < 0 {
-			entry.ThumbsDown = entry.ThumbsDown * -1
+			entry.ThumbsDown *= -1
 		}
 
-		urbanDictRes.List[i].OriginalIndex = i
 		urbanDictRes.List[i].Score = entry.ThumbsUp - entry.ThumbsDown
 	}
 
@@ -178,11 +174,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	word := atUser + urbanDictRes.List[0].Word + ": " + definition
 
 	if strings.HasPrefix(word, "/") {
-		strings.Replace(word, "/", "", 1)
+		word = strings.Replace(word, "/", "", 1)
 	}
 
 	if strings.HasPrefix(word, "!") {
-		strings.Replace(word, "!", "", 1)
+		word = strings.Replace(word, "!", "", 1)
 	}
 
 	if len(word) > 400 {

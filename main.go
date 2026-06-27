@@ -3,28 +3,21 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"urban-dict/pkg"
 	"urban-dict/pkg/otel"
 
 	"codeberg.org/darckfast/workers-go/platform/cloudflare/fetch"
-	"codeberg.org/darckfast/workers-go/platform/cloudflare/lifecycle"
 	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	otelShutdown, err := otel.SetupOTelSDK()
+	_, err := otel.SetupOTelSDK()
 
 	if err != nil {
 		slog.Error("error setting otel", "err", err)
 	}
-
-	defer lifecycle.Ctx.WaitUntil(func() error {
-		return errors.Join(err, otelShutdown(context.Background()))
-	})
 
 	router := httprouter.New()
 
