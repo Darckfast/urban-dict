@@ -6,7 +6,7 @@ require (
 	codeberg.org/darckfast/workers-go v0.4.3
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/mailru/easyjson v0.9.2
-	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.19.0
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.20.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.44.0
