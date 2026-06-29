@@ -1,5 +1,5 @@
-codeberg.org/darckfast/workers-go v0.5.0 h1:m/RZjZ1L12p/9JgD7V8OmL7+QrJbMsGbj3Gk8pk0mGs=
-codeberg.org/darckfast/workers-go v0.5.0/go.mod h1:DGkx2YTjnSwu3I4UyiBUqdA66oxIqKpBaG9L+fw0Q68=
+codeberg.org/darckfast/workers-go v0.5.1 h1:n4g6icQKEV8Jm8Ag3vuIcgj5ZMcmYjuAeecbafrHUgQ=
+codeberg.org/darckfast/workers-go v0.5.1/go.mod h1:DGkx2YTjnSwu3I4UyiBUqdA66oxIqKpBaG9L+fw0Q68=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
