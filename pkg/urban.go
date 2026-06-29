@@ -44,6 +44,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	term = strings.TrimPrefix(term, "!urban")
+	term = strings.TrimSpace(term)
+
 	atUser := ""
 	if len(term) > 0 {
 		if term[0] == '!' {
