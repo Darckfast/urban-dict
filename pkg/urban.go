@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,8 +16,6 @@ import (
 
 	"codeberg.org/darckfast/workers-go/platform/cloudflare/fetch"
 	"github.com/mailru/easyjson"
-	"go.opentelemetry.io/contrib/bridges/otelslog"
-	"go.opentelemetry.io/otel"
 )
 
 const (
@@ -25,10 +24,8 @@ const (
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	ctx, span := otel.Tracer("trace").Start(r.Context(), "http.server")
-	defer span.End()
-	slog.SetDefault(otelslog.NewLogger("urban"))
-
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	ctx := r.Context()
 	w.Header().Add("content-type", "text/plain")
 	origin := r.Header.Get("Origin")
 	if origin != "" {
@@ -80,14 +77,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	var req *http.Request
 	if term == "" || hexValue == "f3a08080" {
-		slog.InfoContext(ctx, "Querying random entry")
+		slog.InfoContext(ctx, "querying random entry")
 		req, err = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/random", nil)
 
 		if err != nil {
 			slog.ErrorContext(ctx, "error creating request", "err", err)
 		}
 	} else {
-		slog.InfoContext(ctx, "Querying entry"+term)
+		slog.InfoContext(ctx, "querying entry '"+term+"'")
 		req, _ = http.NewRequestWithContext(ctx, "GET", BASE_URL+"/define?term="+url.QueryEscape(term), nil)
 	}
 
@@ -98,7 +95,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	res, err = client.Do(req)
 	if err != nil {
-		slog.ErrorContext(ctx, "Error requesting urban API", "error", err.Error())
+		slog.ErrorContext(ctx, "error requesting urban API", "error", err.Error())
 		w.Write([]byte(":( no definition found for: " + term))
 		return
 	}
