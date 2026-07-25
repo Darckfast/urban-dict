@@ -11,5 +11,10 @@ command = "go install codeberg.org/darckfast/workers-go/cmd/workers-go@latest &&
 [observability.logs]
 enabled = true
 
+[durable_objects]
+bindings = [
+  { name = "RUSTY_LIMITER", class_name = "RustyLimiter", script_name = "durable-rusty-limiter"},
+]
+
 [[tail_consumers]]
 service = "axiom-tail-worker"
